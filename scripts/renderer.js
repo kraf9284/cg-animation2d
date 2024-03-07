@@ -23,7 +23,16 @@ class Renderer {
                 }
             ],
             slide1: [],
-            slide2: [],
+            slide2: [
+                {
+                    square: [],
+                    transform: null
+                },
+                {
+                    triangle: [],
+                    transform: null
+                }
+            ],
             slide3: []
         };
     }
@@ -132,6 +141,14 @@ class Renderer {
         //   - have each polygon grow / shrink different sizes
         //   - try at least 1 polygon that grows / shrinks non-uniformly in the x and y directions
 
+        let squareVertices = [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)];
+        let black = [0,0,0,255];
+        this.models.slide2[0].square = squareVertices;
+        this.drawConvexPolygon(this.models.slide2[0].square, black);
+
+        let triangleVertices = [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)];
+        this.models.slide2[1].triangle = triangleVertices;
+        this.drawConvexPolygon(this.models.slide2[1].triangle, black)
 
     }
 
