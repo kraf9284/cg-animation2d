@@ -17,14 +17,8 @@ class Renderer {
 
         this.models = {
             slide0: [
-                // example model (diamond) -> should be replaced with actual model
                 {
-                    vertices: [
-                        CG.Vector3(400, 150, 1),
-                        CG.Vector3(500, 300, 1),
-                        CG.Vector3(400, 450, 1),
-                        CG.Vector3(300, 300, 1)
-                    ],
+                    circle: [],
                     transform: null
                 }
             ],
@@ -33,6 +27,7 @@ class Renderer {
             slide3: []
         };
     }
+    
 
     // flag:  bool
     limitFps(flag) {
@@ -112,11 +107,15 @@ class Renderer {
     drawSlide0() {
         // TODO: draw bouncing ball (circle that changes direction whenever it hits an edge)
         
+        // Circle properties
+        let center = { x: 400, y: 300 };
+        let radius = 50;
+        let segments = 32;
         
-        // Following lines are example of drawing a single polygon
-        // (this should be removed/edited after you implement the slide)
-        let teal = [0, 128, 128, 255];
-        this.drawConvexPolygon(this.models.slide0[0].vertices, teal);
+        // Generate vertices for the circle and add to model
+        this.models.slide0[0].circle = this.generateCircleVertices(center, radius, segments);
+        let black = [0, 0, 0, 255];
+        this.drawConvexPolygon(this.models.slide0[0].circle, black);
     }
 
     //
@@ -160,6 +159,18 @@ class Renderer {
         }
         this.ctx.closePath();
         this.ctx.fill();
+    }
+
+    // Helper method to make circles and add vertices to model
+    generateCircleVertices(center, radius, segments) {
+        let vertices = [];
+        for (let i = 0; i < segments; i++) {
+            let theta = (2 * Math.PI / segments) * i;
+            let x = center.x + radius * Math.cos(theta);
+            let y = center.y + radius * Math.sin(theta);
+            vertices.push(CG.Vector3(x, y, 1));
+        }
+        return vertices;
     }
 };
 
