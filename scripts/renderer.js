@@ -15,11 +15,15 @@ class Renderer {
         this.start_time = null;
         this.prev_time = null;
 
+        let center = { x: 400, y: 300 };
+        let radius = 50;
+        let segments = 32;
+
         this.models = {
             slide0: [
                 {
-                    circle: [],
-                    transform: null
+                    circle: this.generateCircleVertices(center, radius, segments),
+                    transform: []
                 }
             ],
             slide1: [],
@@ -90,9 +94,19 @@ class Renderer {
     //
     updateTransforms(time, delta_time) {
         // TODO: update any transformations needed for animation
+        if(this.slide_idx === 0) {
+            for(let i=0; i<this.models.slide0[0].circle.length; i++) {  // Iterate through the vertices
+                let p = this.models.slide0[0].circle[i];                // Point in homogenous coord form
+                CG.mat3x3Identity(this.models.slide0[0].transform)      // Init transform (dont know how to do that)
+                let tx = 5;
+                let ty = 2;
+                CG.mat3x3Translate(this.models.slide0[0].transform, tx, ty);    // Apply translate matrix to transform
+                this.models.slide0[0].circle[i] = this.models.slide0[0].transform   // Set new point to the result of trans matrix * og point
+            }
+        }
     }
-    
-    //
+
+
     drawSlide() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -115,14 +129,8 @@ class Renderer {
     //
     drawSlide0() {
         // TODO: draw bouncing ball (circle that changes direction whenever it hits an edge)
-        
+
         // Circle properties
-        let center = { x: 400, y: 300 };
-        let radius = 50;
-        let segments = 32;
-        
-        // Generate vertices for the circle and add to model
-        this.models.slide0[0].circle = this.generateCircleVertices(center, radius, segments);
         let black = [0, 0, 0, 255];
         this.drawConvexPolygon(this.models.slide0[0].circle, black);
     }
@@ -140,7 +148,7 @@ class Renderer {
         // TODO: draw at least 2 polygons grow and shrink about their own centers
         //   - have each polygon grow / shrink different sizes
         //   - try at least 1 polygon that grows / shrinks non-uniformly in the x and y directions
-
+        
         let squareVertices = [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)];
         let black = [0,0,0,255];
         this.models.slide2[0].square = squareVertices;
@@ -150,6 +158,8 @@ class Renderer {
         this.models.slide2[1].triangle = triangleVertices;
         this.drawConvexPolygon(this.models.slide2[1].triangle, black)
 
+        this.models.slide2[0].transform = CG.mat3x3Translate;
+        this.models.slide2[1].transform = CG.mat3x3Translate; 
     }
 
     //
