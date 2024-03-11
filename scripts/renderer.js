@@ -24,8 +24,11 @@ class Renderer {
             slide0: [
                 {
                     circle: this.generateCircleVertices(center, radius, segments),
-                    tx: 5,
-                    ty: 2,
+                    radius: radius,
+                    vel_x: 120,
+                    vel_y: 30,
+                    tx: 120,
+                    ty: 30,
                     transform: new Matrix(3, 3)
                 }
             ],
@@ -98,10 +101,19 @@ class Renderer {
     updateTransforms(time, delta_time) {
         // TODO: update any transformations needed for animation
         if(this.slide_idx === 0) {
-            CG.mat3x3Identity(this.models.slide0[0].transform)      // Init transform (dont know how to do that)
-            this.models.slide0[0].tx = this.models.slide0[0].tx + 5*delta_time/1000;
-            this.models.slide0[0].ty = this.models.slide0[0].ty + 2*delta_time/1000;
-            CG.mat3x3Translate(this.models.slide0[0].transform, this.models.slide0[0].tx, this.models.slide0[0].ty);    // Apply translate matrix to transform
+            let model = this.models.slide0[0]
+            CG.mat3x3Identity(model.transform)
+
+            model.tx += model.vel_x*delta_time/1000;
+            model.ty += model.vel_y*delta_time/1000;
+
+            if ((model.pos.x + model.radius > this.canvas.width) || (model.pos.x - model.radius < 0)) {
+                model.vel_x = -model.vel_x; // Reverse X velocity
+            }
+            if ((model.pos.y + model.radius > this.canvas.height) || (model.pos.y - model.radius < 0)) {
+                model.vel_y = -model.vel_y; // Reverse Y velocity
+            }
+            CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
         }
     }
 
@@ -132,10 +144,11 @@ class Renderer {
         // Circle properties
         let black = [0, 0, 0, 255];
         let new_vx = [];
+        let model = this.models.slide0[0];
 
-        for(let i=0; i<this.models.slide0[0].circle.length; i++) {
-            let p = this.models.slide0[0].circle[i];
-            new_vx.push(Matrix.multiply([this.models.slide0[0].transform, p]));
+        for(let i=0; i<model.circle.length; i++) {
+            let p = model.circle[i];
+            new_vx.push(Matrix.multiply([model.transform, p]));
         }
         this.drawConvexPolygon(new_vx, black);
     }
