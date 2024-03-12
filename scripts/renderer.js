@@ -177,7 +177,6 @@ class Renderer {
                 if ((model.centerY + model.radius > this.canvas.height) || (model.centerY - model.radius <= 0)) {
                     model.vel_y = -model.vel_y; // Reverse Y velocity
                 }
-                CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
                 break;
                 
             case 1:
