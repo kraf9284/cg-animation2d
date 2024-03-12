@@ -87,18 +87,25 @@ class Renderer {
             ],
             slide3: [
                 {
-                    hexagon: this.generateCircleVertices(center, radius, 6),
+                    hexagon: this.generateCircleVertices({x: 600, y: 450}, radius, 6),
                     transform1: new Matrix(3,3),
                     transform2: new Matrix(3,3),
                     transform3: new Matrix(3,3),
                     transform4: new Matrix(3,3),
                     transform5: new Matrix(3,3),
-                    vel_x: 30,
-                    vel_y: 10,
+                    vel_x: -30,
+                    vel_y: -10,
                     tx: 30,
                     ty: 10,
-                    centerX: 400,
-                    centerY: 300
+                    centerX: 600,
+                    centerY: 450,
+                    numGrownFrames: 0,
+                    cooldownFrames: 50
+                },
+                {
+                    hexagon: this.generateCircleVertices({x: 600, y: 450}, radius, 6),
+                    centerX: 600,
+                    centerY: 450,
                 }
             ]
         };
@@ -166,8 +173,6 @@ class Renderer {
                 model.tx += model.vel_x * delta_time/1000;
                 model.ty += model.vel_y * delta_time/1000;
 
-                console.log(model.ty);
-
                 CG.mat3x3Translate(model.transform, model.tx, model.ty);
 
                 if ((model.tx + model.radius > this.canvas.width) || (model.tx - model.radius <= 0)) {
@@ -195,9 +200,6 @@ class Renderer {
 
             case 2:
                 model = this.models.slide2;
-                CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
-                CG.mat3x3Scale(model[0].transform2, -0.2 * time / 1000, -0.3 * time / 1000);
-                CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
 
                 CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY); 
                 CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY); 
@@ -224,12 +226,24 @@ class Renderer {
             case 3:
                 model = this.models.slide3[0];
                 CG.mat3x3Translate(model.transform1, -model.centerX, -model.centerY);
-                model.tx += model.vel_x * delta_time/1000;
-                model.ty += model.vel_y * delta_time/1000;
-                CG.mat3x3Translate(model.transform2, model.tx, model.ty);
-                CG.mat3x3Scale(model.transform3, -0.3 * time / 1000, -0.3 * time / 1000);
-                CG.mat3x3Rotate(model.transform4, 3 * time / 1000);
-                CG.mat3x3Translate(model.transform5, model.centerX, model.centerY);
+                if (model.numGrownFrames <= 50) {
+                    CG.mat3x3Scale(model.transform2, model.numGrownFrames / 33 + Math.sin(delta_time / 300), model.numGrownFrames / 33 + Math.sin(delta_time / 300));
+                    model.numGrownFrames++;
+                    if (model.numGrownFrames >= 50) {
+                        model.cooldownFrames = 50;
+                    }
+                } else {
+                    CG.mat3x3Scale(model.transform2, model.cooldownFrames / 33 + Math.sin(delta_time / 300), model.cooldownFrames / 33 + Math.sin(delta_time / 300));
+                    model.cooldownFrames--;
+                    if (model.cooldownFrames <= 0) {
+                        model.numGrownFrames = 0;
+                    }
+                }
+                CG.mat3x3Rotate(model.transform3, 3 * time / 1000);
+                CG.mat3x3Translate(model.transform4, model.centerX, model.centerY);
+                model.tx += model.vel_x * delta_time/1200;
+                model.ty += model.vel_y * delta_time/1200;
+                CG.mat3x3Translate(model.transform5, model.tx, model.ty);
                 break;
         }
     }
@@ -345,7 +359,7 @@ class Renderer {
         // TODO: get creative!
         //   - animation should involve all three basic transformation types
         //     (translation, scaling, and rotation)
-        let black = [0,0,0,255];
+        let other = [128, 0, 247, 255];
         let newHex = [];
         let model = this.models.slide3[0];
 
@@ -357,7 +371,7 @@ class Renderer {
             p = Matrix.multiply([model.transform4, p]);
             newHex.push(Matrix.multiply([model.transform5, p]));
         }
-        this.drawConvexPolygon(newHex, black);
+        this.drawConvexPolygon(newHex, other);
     }
     
     // vertex_list:  array of object [Matrix(3, 1), Matrix(3, 1), ..., Matrix(3, 1)]
