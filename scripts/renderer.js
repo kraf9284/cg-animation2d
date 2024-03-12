@@ -24,7 +24,8 @@ class Renderer {
             slide0: [
                 {
                     circle: this.generateCircleVertices(center, radius, segments),
-                    pos: center,
+                    centerX: center.x,
+                    centerY: center.y,
                     vel_x: 120,
                     vel_y: 30,
                     tx: 120,
@@ -55,11 +56,19 @@ class Renderer {
             slide2: [
                 {
                     square: [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)],
-                    transform: new Matrix(3,3)
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
+                    centerX: 450,
+                    centerY: 350 
                 },
                 {
                     triangle: [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)],
-                    transform: new Matrix(3,3)
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
+                    centerX: 200,
+                    centerY: 150
                 }
             ],
             slide3: []
@@ -129,29 +138,36 @@ class Renderer {
                 model.ty += model.vel_y*delta_time/1000;
                 CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
 
-                if ((model.pos.x + model.radius > this.canvas.width) || (model.pos.x - model.radius <= 0)) {
+                if ((model.centerX + model.radius > this.canvas.width) || (model.centerX - model.radius <= 0)) {
                     model.vel_x *= -1; // Reverse X velocity
                 }
-                if ((model.pos.y + model.radius > this.canvas.height) || (model.pos.y - model.radius <= 0)) {
+                if ((model.centerY + model.radius > this.canvas.height) || (model.centerY - model.radius <= 0)) {
                     model.vel_y *= -1; // Reverse Y velocity
                 }
                 break;
                 
             case 1:
                 model = this.models.slide1;
-                    CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
-                    CG.mat3x3Rotate(model[0].transform2, -6 * time / 1000);
-                    CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
+                CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
+                CG.mat3x3Rotate(model[0].transform2, -6 * time / 1000);
+                CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
 
-                    CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
-                    CG.mat3x3Rotate(model[1].transform2, 3 * time / 1000);
-                    CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
+                CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
+                CG.mat3x3Rotate(model[1].transform2, 3 * time / 1000);
+                CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
                 break;
 
             case 2:
                 model = this.models.slide2;
-                CG.mat3x3Scale(model[0].transform, 3 * time * 10000);
-            }
+                CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
+                CG.mat3x3Scale(model[0].transform2, 2 * time / 1000, 3 * time / 1000);
+                CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
+
+                CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
+                CG.mat3x3Scale(model[1].transform2, 0.3 * time / 1000, 0.6 * time / 1000);
+                CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
+                break;
+        }
     }
 
 
@@ -236,13 +252,18 @@ class Renderer {
 
         for(let i=0; i<model[0].square.length; i++) {
             let p = model[0].square[i];
-            newSquare.push(Matrix.multiply([model[0].transform, p]));
+            p = Matrix.multiply([model[0].transform1, p]);
+            p = Matrix.multiply([model[0].transform2, p]);
+            newSquare.push(Matrix.multiply([model[0].transform3, p]));
         }
         this.drawConvexPolygon(newSquare, black);
 
         for(let i=0; i<model[1].triangle.length; i++) {
             let p = model[1].triangle[i];
-            newTriangle.push(Matrix.multiply([model[1].transform,p]));
+
+            p = Matrix.multiply([model[1].transform1, p]);
+            p = Matrix.multiply([model[1].transform2, p]);
+            newTriangle.push(Matrix.multiply([model[1].transform3,p]));
             
         }
         this.drawConvexPolygon(newTriangle, black);
