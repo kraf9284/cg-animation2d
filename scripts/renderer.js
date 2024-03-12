@@ -24,6 +24,7 @@ class Renderer {
             slide0: [
                 {
                     circle: this.generateCircleVertices(center, radius, segments),
+                    pos: center,
                     vel_x: 120,
                     vel_y: 30,
                     tx: 120,
@@ -119,29 +120,24 @@ class Renderer {
             case 0:
                 model = this.models.slide0[0]
                 CG.mat3x3Identity(model.transform)
-
+                
                 model.tx += model.vel_x*delta_time/1000;
                 model.ty += model.vel_y*delta_time/1000;
-
-                if ((model.tx + model.radius > this.canvas.width) || (model.tx - model.radius < 0)) {
-                    model.vel_x = -model.vel_x; // Reverse X velocity
-                }
-                if ((model.ty + model.radius > this.canvas.height) || (model.ty - model.radius < 0)) {
-                    model.vel_y = -model.vel_y; // Reverse Y velocity
-                }
                 CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
+
+                if ((model.pos.x + model.radius > this.canvas.width) || (model.pos.x - model.radius <= 0)) {
+                    model.vel_x *= -1; // Reverse X velocity
+                }
+                if ((model.pos.y + model.radius > this.canvas.height) || (model.pos.y - model.radius <= 0)) {
+                    model.vel_y *= -1; // Reverse Y velocity
+                }
                 break;
                 
             case 1:
                 model = this.models.slide1;
                 for(let i=0; i<model.length; i++) {
                     CG.mat3x3Identity(model[i].transform)
-                    //T(x,y) * R * T(-x,-y)(P)
-                    //CG.mat3x3Translate(this.models.slide1[1].transform, -250, -150);
                     CG.mat3x3Rotate(model[i].transform, 3 * time / 1000);
-                    //CG.mat3x3Translate(this.models.slide1[1].transform, this.models.slide1[1].centerX, this.models.slide1[1].centerY);
-    
-                    //let bruh = Matrix.multiply([origin, rotate, originReturn]);
                 }
                 break;
 
@@ -183,6 +179,10 @@ class Renderer {
             let p = model.circle[i];
             new_vx.push(Matrix.multiply([model.transform, p]));
         }
+        let center = CG.Vector3(model.pos.x, model.pos.y, 1);
+        let new_pos = Matrix.multiply([model.transform, center]);
+        model.pos.x = new_pos[0];
+        model.pos.y = new_pos[1];
         this.drawConvexPolygon(new_vx, black);
     }
 
