@@ -87,25 +87,21 @@ class Renderer {
             ],
             slide3: [
                 {
-                    hexagon: this.generateCircleVertices({x: 600, y: 450}, radius, 6),
+                    hexagon: this.generateCircleVertices({x: 550, y: 300}, radius, 6),
                     transform1: new Matrix(3,3),
                     transform2: new Matrix(3,3),
                     transform3: new Matrix(3,3),
                     transform4: new Matrix(3,3),
                     transform5: new Matrix(3,3),
-                    vel_x: -30,
-                    vel_y: -10,
+                    vel_x: -120,
+                    vel_y: -90,
                     tx: 30,
                     ty: 10,
-                    centerX: 600,
-                    centerY: 450,
+                    radius: radius,
+                    centerX: 550,
+                    centerY: 300,
                     numGrownFrames: 0,
                     cooldownFrames: 50
-                },
-                {
-                    hexagon: this.generateCircleVertices({x: 600, y: 450}, radius, 6),
-                    centerX: 600,
-                    centerY: 450,
                 }
             ]
         };
@@ -241,9 +237,20 @@ class Renderer {
                 }
                 CG.mat3x3Rotate(model.transform3, 3 * time / 1000);
                 CG.mat3x3Translate(model.transform4, model.centerX, model.centerY);
-                model.tx += model.vel_x * delta_time/1200;
-                model.ty += model.vel_y * delta_time/1200;
+                
+                CG.mat3x3Identity(model.transform5);
+                model.tx += model.vel_x * delta_time/1000;
+                model.ty += model.vel_y * delta_time/1000;
                 CG.mat3x3Translate(model.transform5, model.tx, model.ty);
+                
+                console.log(model.tx);
+
+                if ((model.tx > this.canvas.width-580) || (model.tx <= -500)) {
+                    model.vel_x *= -1; // Reverse X velocity
+                }
+                if ((model.ty + model.radius > this.canvas.height-300) || (model.ty + model.radius <= -150)) {
+                    model.vel_y *= -1; // Reverse Y velocity
+                }
                 break;
         }
     }
