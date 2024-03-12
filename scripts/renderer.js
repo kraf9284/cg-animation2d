@@ -20,17 +20,18 @@ class Renderer {
         let radius = 50;
         let segments = 32;
 
+
         this.models = {
             slide0: [
                 {
                     circle: this.generateCircleVertices(center, radius, segments),
-                    centerX: center.x,
-                    centerY: center.y,
                     vel_x: 120,
                     vel_y: 30,
                     tx: 120,
                     ty: 30,
-                    transform: new Matrix(3, 3)
+                    transform: new Matrix(3, 3),
+                    centerX: 450,
+                    centerY: 350 
                 }
             ],
             slide1: [
@@ -60,7 +61,9 @@ class Renderer {
                     transform2: new Matrix(3,3),
                     transform3: new Matrix(3,3),
                     centerX: 450,
-                    centerY: 350 
+                    centerY: 350,
+                    numGrownFrames: 0,
+                    cooldownFrames: 50
                 },
                 {
                     triangle: [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)],
@@ -68,7 +71,9 @@ class Renderer {
                     transform2: new Matrix(3,3),
                     transform3: new Matrix(3,3),
                     centerX: 200,
-                    centerY: 150
+                    centerY: 150,
+                    numGrownFrames: 0,
+                    cooldownFrames: 50
                 }
             ],
             slide3: []
@@ -133,17 +138,17 @@ class Renderer {
             case 0:
                 model = this.models.slide0[0]
                 CG.mat3x3Identity(model.transform)
-                
+
                 model.tx += model.vel_x*delta_time/1000;
                 model.ty += model.vel_y*delta_time/1000;
-                CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
 
                 if ((model.centerX + model.radius > this.canvas.width) || (model.centerX - model.radius <= 0)) {
-                    model.vel_x *= -1; // Reverse X velocity
+                    model.vel_x = -model.vel_x; // Reverse X velocity
                 }
                 if ((model.centerY + model.radius > this.canvas.height) || (model.centerY - model.radius <= 0)) {
-                    model.vel_y *= -1; // Reverse Y velocity
+                    model.vel_y = -model.vel_y; // Reverse Y velocity
                 }
+                CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
                 break;
                 
             case 1:
@@ -159,15 +164,30 @@ class Renderer {
 
             case 2:
                 model = this.models.slide2;
-                CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
-                CG.mat3x3Scale(model[0].transform2, 2 * time / 1000, 3 * time / 1000);
-                CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
 
-                CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
-                CG.mat3x3Scale(model[1].transform2, 0.3 * time / 1000, 0.6 * time / 1000);
+                CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY); 
+                CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY); 
+
+                if (model[0].numGrownFrames <= 50) {
+                    CG.mat3x3Scale(model[0].transform2, model[0].numGrownFrames / 20 + Math.sin(delta_time / 300), model[0].numGrownFrames / 20 + Math.cos(delta_time / 40));
+                    CG.mat3x3Scale(model[1].transform2, model[0].numGrownFrames / 10 + Math.sin(delta_time / 500), model[0].numGrownFrames / 20 + Math.cos(delta_time / 100));
+                    model[0].numGrownFrames++;
+                    if (model[0].numGrownFrames >= 50) {
+                        model[0].cooldownFrames = 50;
+                    }
+                } else {
+                    CG.mat3x3Scale(model[0].transform2, model[0].cooldownFrames / 20 + Math.sin(delta_time / 300), model[0].cooldownFrames / 20 + Math.cos(delta_time / 40));
+                    CG.mat3x3Scale(model[1].transform2, model[0].cooldownFrames / 10 + Math.sin(delta_time / 500), model[0].cooldownFrames / 20 + Math.cos(delta_time / 100));
+                    model[0].cooldownFrames--;
+                    if (model[0].cooldownFrames <= 0) {
+                        model[0].numGrownFrames = 0;
+                    }
+                }
+
+                CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
                 CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
                 break;
-        }
+            }
     }
 
 
@@ -203,10 +223,6 @@ class Renderer {
             let p = model.circle[i];
             new_vx.push(Matrix.multiply([model.transform, p]));
         }
-        let center = CG.Vector3(model.pos.x, model.pos.y, 1);
-        let new_pos = Matrix.multiply([model.transform, center]);
-        model.pos.x = new_pos[0];
-        model.pos.y = new_pos[1];
         this.drawConvexPolygon(new_vx, black);
     }
 
@@ -239,7 +255,7 @@ class Renderer {
         this.drawConvexPolygon(newTriangle, black);
     }
 
-    //
+
     drawSlide2() {
         // TODO: draw at least 2 polygons grow and shrink about their own centers
         //   - have each polygon grow / shrink different sizes
@@ -269,7 +285,7 @@ class Renderer {
         this.drawConvexPolygon(newTriangle, black);
     }
 
-    //
+
     drawSlide3() {
         // TODO: get creative!
         //   - animation should involve all three basic transformation types
