@@ -16,7 +16,7 @@ class Renderer {
         this.start_time = null;
         this.prev_time = null;
 
-        let center = { x: 400, y: 300 };
+        let center = { x: 0, y: 100 };
         let radius = 50;
         let segments = 32;
 
@@ -25,15 +25,12 @@ class Renderer {
             slide0: [
                 {
                     circle: this.generateCircleVertices(center, radius, segments),
-                    vel_x: 120,
-                    vel_y: 30,
+                    vel_x: 240,
+                    vel_y: 160,
                     tx: 120,
-                    ty: 30,
-                    transform1: new Matrix(3, 3),
-                    transform2: new Matrix(3, 3),
-                    transform3: new Matrix(3, 3),
-                    centerX: 450,
-                    centerY: 350 
+                    ty: 80,
+                    radius: radius,
+                    transform: new Matrix(3, 3)
                 }
             ],
             slide1: [
@@ -164,18 +161,20 @@ class Renderer {
         switch (this.slide_idx) {
             case 0:
                 model = this.models.slide0[0]
+                CG.mat3x3Identity(model.transform);
                 
                 model.tx += model.vel_x * delta_time/1000;
                 model.ty += model.vel_y * delta_time/1000;
-                CG.mat3x3Translate(model.transform1, -model.centerX, -model.centerY);
-                CG.mat3x3Translate(model.transform2, model.tx, model.ty);
-                CG.mat3x3Translate(model.transform3, model.centerX, model.centerY);
 
-                if ((model.centerX + model.radius > this.canvas.width) || (model.centerX - model.radius <= 0)) {
-                    model.vel_x = -model.vel_x; // Reverse X velocity
+                console.log(model.ty);
+
+                CG.mat3x3Translate(model.transform, model.tx, model.ty);
+
+                if ((model.tx + model.radius > this.canvas.width) || (model.tx - model.radius <= 0)) {
+                    model.vel_x *= -1; // Reverse X velocity
                 }
-                if ((model.centerY + model.radius > this.canvas.height) || (model.centerY - model.radius <= 0)) {
-                    model.vel_y = -model.vel_y; // Reverse Y velocity
+                if ((model.ty + model.radius > this.canvas.height-100) || (model.ty + model.radius <= 50)) {
+                    model.vel_y *= -1; // Reverse Y velocity
                 }
                 break;
                 
@@ -266,9 +265,7 @@ class Renderer {
 
         for(let i=0; i<model.circle.length; i++) {
             let p = model.circle[i];
-            p = Matrix.multiply([model.transform1, p]);
-            p = Matrix.multiply([model.transform2, p]);
-            new_vx.push(Matrix.multiply([model.transform3, p]));
+            new_vx.push(Matrix.multiply([model.transform, p]));
         }
         this.drawConvexPolygon(new_vx, black);
     }
