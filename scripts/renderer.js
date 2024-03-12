@@ -30,7 +30,9 @@ class Renderer {
                     vel_y: 30,
                     tx: 120,
                     ty: 30,
-                    transform: new Matrix(3, 3)
+                    transform1: new Matrix(3, 3),
+                    transform2: new Matrix(3, 3),
+                    transform3: new Matrix(3, 3)
                 }
             ],
             slide1: [
@@ -51,6 +53,15 @@ class Renderer {
                     rotationSpeed: -10,
                     centerX: 200,
                     centerY: 150
+                },
+                {
+                    pentagon: this.generateCircleVertices({x: 600, y: 450}, 60, 5),
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
+                    rotationSpeed: -10,
+                    centerX: 600,
+                    centerY: 450
                 }
             ],
             slide2: [
@@ -67,11 +78,27 @@ class Renderer {
                     transform1: new Matrix(3,3),
                     transform2: new Matrix(3,3),
                     transform3: new Matrix(3,3),
+                    rotationSpeed: -10,
                     centerX: 200,
                     centerY: 150
                 }
             ],
-            slide3: []
+            slide3: [
+                {
+                    hexagon: this.generateCircleVertices(center, radius, 6),
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
+                    transform4: new Matrix(3,3),
+                    transform5: new Matrix(3,3),
+                    vel_x: 30,
+                    vel_y: 10,
+                    tx: 30,
+                    ty: 10,
+                    centerX: 400,
+                    centerY: 300
+                }
+            ]
         };
     }
     
@@ -132,11 +159,12 @@ class Renderer {
         switch (this.slide_idx) {
             case 0:
                 model = this.models.slide0[0]
-                CG.mat3x3Identity(model.transform)
                 
-                model.tx += model.vel_x*delta_time/1000;
-                model.ty += model.vel_y*delta_time/1000;
-                CG.mat3x3Translate(model.transform, model.tx, model.ty);    // Apply translate matrix to transform
+                model.tx += model.vel_x * delta_time/1000;
+                model.ty += model.vel_y * delta_time/1000;
+                CG.mat3x3Translate(model.transform1, -model.centerX, -model.centerY);
+                CG.mat3x3Translate(model.transform2, model.tx, model.ty);
+                CG.mat3x3Translate(model.transform3, model.centerX, model.centerY);
 
                 if ((model.centerX + model.radius > this.canvas.width) || (model.centerX - model.radius <= 0)) {
                     model.vel_x *= -1; // Reverse X velocity
@@ -155,17 +183,31 @@ class Renderer {
                 CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
                 CG.mat3x3Rotate(model[1].transform2, 3 * time / 1000);
                 CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
+
+                CG.mat3x3Translate(model[2].transform1, -model[2].centerX, -model[2].centerY);
+                CG.mat3x3Rotate(model[2].transform2, 4 * time / 1000);
+                CG.mat3x3Translate(model[2].transform3, model[2].centerX, model[2].centerY);
                 break;
 
             case 2:
                 model = this.models.slide2;
                 CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
-                CG.mat3x3Scale(model[0].transform2, 2 * time / 1000, 3 * time / 1000);
+                CG.mat3x3Scale(model[0].transform2, -0.2 * time / 1000, -0.3 * time / 1000);
                 CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
 
                 CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
                 CG.mat3x3Scale(model[1].transform2, 0.3 * time / 1000, 0.6 * time / 1000);
                 CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
+                break;
+            case 3:
+                model = this.models.slide3[0];
+                CG.mat3x3Translate(model.transform1, -model.centerX, -model.centerY);
+                model.tx += model.vel_x * delta_time/1000;
+                model.ty += model.vel_y * delta_time/1000;
+                CG.mat3x3Translate(model.transform2, model.tx, model.ty);
+                CG.mat3x3Scale(model.transform3, -0.3 * time / 1000, -0.3 * time / 1000);
+                CG.mat3x3Rotate(model.transform4, 3 * time / 1000);
+                CG.mat3x3Translate(model.transform5, model.centerX, model.centerY);
                 break;
         }
     }
@@ -201,12 +243,10 @@ class Renderer {
 
         for(let i=0; i<model.circle.length; i++) {
             let p = model.circle[i];
-            new_vx.push(Matrix.multiply([model.transform, p]));
+            p = Matrix.multiply([model.transform1, p]);
+            p = Matrix.multiply([model.transform2, p]);
+            new_vx.push(Matrix.multiply([model.transform3, p]));
         }
-        let center = CG.Vector3(model.pos.x, model.pos.y, 1);
-        let new_pos = Matrix.multiply([model.transform, center]);
-        model.pos.x = new_pos[0];
-        model.pos.y = new_pos[1];
         this.drawConvexPolygon(new_vx, black);
     }
 
@@ -218,6 +258,7 @@ class Renderer {
         let black = [0,0,0,255];
         let newSquare = [];
         let newTriangle = [];
+        let newPenta = [];
         let model = this.models.slide1;
 
         for(let i=0; i<model[0].square.length; i++) {
@@ -237,6 +278,16 @@ class Renderer {
             
         }
         this.drawConvexPolygon(newTriangle, black);
+
+        for(let i=0; i<model[2].pentagon.length; i++) {
+            let p = model[2].pentagon[i];
+
+            p = Matrix.multiply([model[2].transform1, p]);
+            p = Matrix.multiply([model[2].transform2, p]);
+            newPenta.push(Matrix.multiply([model[2].transform3,p]));
+            
+        }
+        this.drawConvexPolygon(newPenta, black);
     }
 
     //
@@ -274,8 +325,19 @@ class Renderer {
         // TODO: get creative!
         //   - animation should involve all three basic transformation types
         //     (translation, scaling, and rotation)
-        
-        
+        let black = [0,0,0,255];
+        let newHex = [];
+        let model = this.models.slide3[0];
+
+        for(let i=0; i<model.hexagon.length; i++) {
+            let p = model.hexagon[i];
+            p = Matrix.multiply([model.transform1, p]);
+            p = Matrix.multiply([model.transform2, p]);
+            p = Matrix.multiply([model.transform3, p]);
+            p = Matrix.multiply([model.transform4, p]);
+            newHex.push(Matrix.multiply([model.transform5, p]));
+        }
+        this.drawConvexPolygon(newHex, black);
     }
     
     // vertex_list:  array of object [Matrix(3, 1), Matrix(3, 1), ..., Matrix(3, 1)]
