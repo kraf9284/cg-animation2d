@@ -35,14 +35,18 @@ class Renderer {
             slide1: [
                 {
                     square: [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)],
-                    transform: new Matrix(3,3),
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
                     rotationSpeed: 5,
                     centerX: 450,
                     centerY: 350 
                 },
                 {
                     triangle: [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)],
-                    transform: new Matrix(3,3),
+                    transform1: new Matrix(3,3),
+                    transform2: new Matrix(3,3),
+                    transform3: new Matrix(3,3),
                     rotationSpeed: -10,
                     centerX: 200,
                     centerY: 150
@@ -50,12 +54,12 @@ class Renderer {
             ],
             slide2: [
                 {
-                    square: [],
-                    transform: null
+                    square: [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)],
+                    transform: new Matrix(3,3)
                 },
                 {
-                    triangle: [],
-                    transform: null
+                    triangle: [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)],
+                    transform: new Matrix(3,3)
                 }
             ],
             slide3: []
@@ -135,14 +139,18 @@ class Renderer {
                 
             case 1:
                 model = this.models.slide1;
-                for(let i=0; i<model.length; i++) {
-                    CG.mat3x3Identity(model[i].transform)
-                    CG.mat3x3Rotate(model[i].transform, 3 * time / 1000);
-                }
+                    CG.mat3x3Translate(model[0].transform1, -model[0].centerX, -model[0].centerY);
+                    CG.mat3x3Rotate(model[0].transform2, -6 * time / 1000);
+                    CG.mat3x3Translate(model[0].transform3, model[0].centerX, model[0].centerY);
+
+                    CG.mat3x3Translate(model[1].transform1, -model[1].centerX, -model[1].centerY);
+                    CG.mat3x3Rotate(model[1].transform2, 3 * time / 1000);
+                    CG.mat3x3Translate(model[1].transform3, model[1].centerX, model[1].centerY);
                 break;
 
             case 2:
-                CG.mat3x3Scale(this.models.slide2[0].transform, 3 * time * 10000);
+                model = this.models.slide2;
+                CG.mat3x3Scale(model[0].transform, 3 * time * 10000);
             }
     }
 
@@ -198,21 +206,18 @@ class Renderer {
 
         for(let i=0; i<model[0].square.length; i++) {
             let p = model[0].square[i];
-            newSquare.push(Matrix.multiply([model[0].transform, p]));
+            p = Matrix.multiply([model[0].transform1, p]);
+            p = Matrix.multiply([model[0].transform2, p]);
+            newSquare.push(Matrix.multiply([model[0].transform3, p]));
         }
         this.drawConvexPolygon(newSquare, black);
 
         for(let i=0; i<model[1].triangle.length; i++) {
             let p = model[1].triangle[i];
-            //CG.mat3x3Translate(model[1].transform, -1 * model[1].centerX, -1 * model[1].centerY);
-            //Matrix.multiply([model[1].transform, p]);
-            //CG.mat3x3Rotate(model[1].transform, 5 * this.time / 1000);
-            
-            //Matrix.multiply([model[1].transform, p]);
-            //console.log(p);
-            
-            //CG.mat3x3Translate(model[1].transform, model[1].centerX, model[1].centerY);
-            newTriangle.push(Matrix.multiply([model[1].transform, p]));
+
+            p = Matrix.multiply([model[1].transform1, p]);
+            p = Matrix.multiply([model[1].transform2, p]);
+            newTriangle.push(Matrix.multiply([model[1].transform3,p]));
             
         }
         this.drawConvexPolygon(newTriangle, black);
@@ -224,17 +229,23 @@ class Renderer {
         //   - have each polygon grow / shrink different sizes
         //   - try at least 1 polygon that grows / shrinks non-uniformly in the x and y directions
         
-        let squareVertices = [CG.Vector3(400, 300, 1), CG.Vector3(400, 400, 1),CG.Vector3(500, 400, 1),CG.Vector3(500, 300, 1)];
         let black = [0,0,0,255];
-        this.models.slide2[0].square = squareVertices;
-        this.drawConvexPolygon(this.models.slide2[0].square, black);
+        let newSquare = [];
+        let newTriangle = [];
+        let model = this.models.slide2;
 
-        let triangleVertices = [CG.Vector3(100, 100, 1), CG.Vector3(200,200,1), CG.Vector3(300,100,1)];
-        this.models.slide2[1].triangle = triangleVertices;
-        this.drawConvexPolygon(this.models.slide2[1].triangle, black)
+        for(let i=0; i<model[0].square.length; i++) {
+            let p = model[0].square[i];
+            newSquare.push(Matrix.multiply([model[0].transform, p]));
+        }
+        this.drawConvexPolygon(newSquare, black);
 
-        this.models.slide2[0].transform = CG.mat3x3Translate;
-        this.models.slide2[1].transform = CG.mat3x3Translate; 
+        for(let i=0; i<model[1].triangle.length; i++) {
+            let p = model[1].triangle[i];
+            newTriangle.push(Matrix.multiply([model[1].transform,p]));
+            
+        }
+        this.drawConvexPolygon(newTriangle, black);
     }
 
     //
